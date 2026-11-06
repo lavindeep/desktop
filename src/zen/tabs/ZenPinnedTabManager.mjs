@@ -730,7 +730,10 @@ class nsZenPinnedTabManager extends nsZenDOMOperatedFeature {
         }
       }
     );
-    zenAddEssential.hidden = isEssential || !!contextTab.group;
+    // Tabs in a folder can become essentials (dragging them there already
+    // works), but split views have to stay together.
+    zenAddEssential.hidden =
+      isEssential || (!!contextTab.group && !contextTab.group.isZenFolder);
     document.l10n
       .formatValue("tab-context-zen-add-essential-badge", {
         num: gBrowser._numZenEssentials,
