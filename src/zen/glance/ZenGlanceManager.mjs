@@ -309,26 +309,42 @@ class nsZenGlanceManager extends nsZenDOMOperatedFeature {
    */
   observe(subject, topic) {
     if (topic === "quit-application-requested") {
-      this.onUnload();
+      this.#closeGlancesForQuit(subject);
     }
   }
 
   /**
-   * Closes any open glances, either when the window unloads or when a quit is
-   * requested.
+   * Closes every open glance before quitting. If the user chooses to stay on
+   * a glance's page, the quit is canceled and every glance stays open.
    *
-   * @param {Event} [event] - The unload event, or nothing for a quit request.
+   * @param {nsISupportsPRBool} cancelQuit - Set to true to cancel the quit.
    */
-  onUnload(event) {
-    if (event?.type === "unload") {
-      // The window is really going now, so stop listening. A quit request can
-      // still be canceled, so that path leaves the observer in place.
-      Services.obs.removeObserver(this, "quit-application-requested");
-    } else {
-      for (const [, glance] of this.#glances) {
-        gBrowser.removeTab(glance.tab, { animate: false });
+  #closeGlancesForQuit(cancelQuit) {
+    if (cancelQuit.data) {
+      return;
+    }
+    for (const { browser } of this.#glances.values()) {
+      if (!browser.permitUnload().permitUnload) {
+        cancelQuit.data = true;
+        return;
       }
     }
+    for (const { tab } of this.#glances.values()) {
+      // Close it as a plain tab, without asking about unloading again.
+      tab.removeAttribute("zen-glance-tab");
+      this.#ignoreClose = true;
+      gBrowser.removeTab(tab, { animate: false, skipPermitUnload: true });
+    }
+    this.#glances.clear();
+    this.#currentGlanceID = null;
+  }
+
+  /**
+   * Stops listening for quit requests and forgets every glance once the
+   * window unloads.
+   */
+  onUnload() {
+    Services.obs.removeObserver(this, "quit-application-requested");
     this.#glances.clear();
   }
 
