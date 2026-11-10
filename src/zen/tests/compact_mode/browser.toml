@@ -4,6 +4,8 @@
 
 [DEFAULT]
 
+["browser_compact_mode_dragover_background.js"]
+
 ["browser_compact_mode_layout_event.js"]
 
 ["browser_compact_mode_width.js"]

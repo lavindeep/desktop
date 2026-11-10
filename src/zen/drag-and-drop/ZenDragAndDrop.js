@@ -1541,10 +1541,14 @@
       }
       const margin = 2;
       const rect = window.windowUtils.getBoundsWithoutFlushing(element);
+      // The background is positioned relative to the toolbox, which doesn't
+      // start at the top of the window in every layout.
+      const toolboxTop =
+        window.windowUtils.getBoundsWithoutFlushing(gNavToolbox).top;
       this.#dragOverBackground = document.createElement("div");
       this.#dragOverBackground.id = "zen-dragover-background";
       this.#dragOverBackground.style.height = `${rect.height - margin * 2}px`;
-      this.#dragOverBackground.style.top = `${rect.top + margin}px`;
+      this.#dragOverBackground.style.top = `${rect.top - toolboxTop + margin}px`;
       gNavToolbox.appendChild(this.#dragOverBackground);
       this.#lastDropTarget = element;
       return true;
